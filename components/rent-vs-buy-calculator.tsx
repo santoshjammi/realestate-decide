@@ -5,6 +5,7 @@ import { analyzeRentVsBuy, type RentVsBuyInput } from '@/lib/calculators/rent-vs
 import { formatUSD } from '@/lib/format';
 import { Field, NumberInput } from '@/components/field';
 import { MetricRow, ResultsPanel } from '@/components/results-panel';
+import EmailCapture from '@/components/email-capture';
 
 const defaults: RentVsBuyInput = {
   homePrice: 300000,
@@ -113,6 +114,14 @@ export default function RentVsBuyCalculator() {
             highlight
           />
         </ResultsPanel>
+
+        {/* Results gate — bonus offer, never withholds the verdict */}
+        <EmailCapture
+          source="free-calculator"
+          heading="Get your full report + the free 1% Rule cheat sheet"
+          subtext="Your verdict is above — this just adds the complete breakdown and the rule that catches bad deals. No spam, unsubscribe anytime."
+          cta="Send me the full report"
+        />
       </div>
     </div>
   );

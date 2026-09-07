@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import EmailCapture from '@/components/email-capture';
 
 const calculators = [
   {
@@ -61,6 +62,16 @@ export default function Home() {
         <p className="mt-4 text-sm text-gray-500 dark:text-gray-400">
           No credit card. No signup. Just the math.
         </p>
+      </section>
+
+      {/* Lead magnet capture (cold traffic) */}
+      <section className="mx-auto mt-10 max-w-2xl">
+        <EmailCapture
+          source="homepage"
+          heading="Free: the 1% Rule Cheat Sheet"
+          subtext="One page. The exact rule investors use to spot a bad deal before writing an offer. Yours free — no spam, unsubscribe anytime."
+          cta="Send me the cheat sheet"
+        />
       </section>
 
       {/* The anchor offer */}
