@@ -1,28 +1,41 @@
 #!/usr/bin/env python3
 """Deploy RealEstateDecide static export (out/) to the realestate-decide
-subdomain folder on Hostinger via a single persistent ftplib session.
+subdomain on Hostinger via FTP.
 
-Usage: deploy_realestate.py <out_dir> [remote_dir]
-Remote dir defaults to /public_html/realestate-decide — the docroot for the
-realestate-decide.countrysnews.com subdomain (if created as a subdirectory).
-Adapt ROOT_REMOTE if Hostinger's hPanel maps the subdomain to a different path.
+Reads credentials from the Hermes vault at ~/.hermes/vault/hostinger.env
+(RE_FTP_HOST/RE_FTP_USER/RE_FTP_PASS/RE_FTP_DIR) so secrets never live in chat,
+code, or git. Override any value with the same-named env var if you prefer.
+
+Usage: deploy_realestate.py [out_dir] [remote_dir]
+  out_dir    default: out   (the static export)
+  remote_dir default: RE_FTP_DIR from vault, else /public_html
 """
 import ftplib
 import os
 import sys
+from pathlib import Path
+from dotenv import load_dotenv
 
-HOST = "212.1.209.3"
-USER = os.environ.get("CN_FTP_USER", "u237278792.countrysnews.com")
-PASS = os.environ.get("CN_FTP_PASS")
-if not PASS:
-    sys.exit("CN_FTP_PASS not set (secret must come from env, not code)")
-ROOT_REMOTE = os.environ.get("RE_DEPLOY_DIR", "/public_html/realestate-decide")
+# Load vault secrets (best-effort; falls back to env vars already set)
+VAULT = os.path.expanduser("~/.hermes/vault/hostinger.env")
+if os.path.exists(VAULT):
+    load_dotenv(VAULT)
+
+HOST = os.environ.get("RE_FTP_HOST", "212.1.209.3")
+PORT = int(os.environ.get("RE_FTP_PORT", "21"))
+USER = os.environ.get("RE_FTP_USER", "u237278792.realestate-decide.countrysnews.com")
+PASS = os.environ.get("RE_FTP_PASS")
+DIR = os.environ.get("RE_FTP_DIR", "/public_html")
 SOCK_TIMEOUT = 30
+
+if not PASS or PASS.startswith("___MISSING"):
+    sys.exit("RE_FTP_PASS not set — add the subdomain FTP password to "
+             "~/.hermes/vault/hostinger.env (RE_FTP_PASS=...) then re-run.")
 
 
 def new_ftp():
     ftp = ftplib.FTP()
-    ftp.connect(HOST, 21, timeout=SOCK_TIMEOUT)
+    ftp.connect(HOST, PORT, timeout=SOCK_TIMEOUT)
     ftp.login(USER, PASS)
     return ftp
 
@@ -72,7 +85,7 @@ def walk_and_upload(out_dir):
         for name in names:
             local = os.path.join(root, name)
             rel = os.path.relpath(local, out_dir)
-            remote = f"{ROOT_REMOTE}/{rel}"
+            remote = f"{DIR}/{rel}"
             files.append((local, remote))
     dirs = set()
     for local, remote in files:
@@ -92,11 +105,11 @@ def walk_and_upload(out_dir):
         ftp.quit()
     except Exception:
         pass
-    print(f"DONE uploaded={uploaded} failed={failed} target={ROOT_REMOTE}")
+    print(f"DONE uploaded={uploaded} failed={failed} target={DIR}")
 
 
 if __name__ == "__main__":
     out = sys.argv[1] if len(sys.argv) > 1 else "out"
     if len(sys.argv) > 2:
-        ROOT_REMOTE = sys.argv[2]
+        DIR = sys.argv[2]
     walk_and_upload(out)
