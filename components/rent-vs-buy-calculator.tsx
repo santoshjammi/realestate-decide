@@ -120,7 +120,6 @@ export default function RentVsBuyCalculator() {
           source="free-calculator"
           heading="Get your full report + the free 1% Rule cheat sheet"
           subtext="Your verdict is above — this just adds the complete breakdown and the rule that catches bad deals. No spam, unsubscribe anytime."
-          cta="Send me the full report"
         />
       </div>
     </div>

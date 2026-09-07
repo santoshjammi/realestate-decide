@@ -43,6 +43,6 @@ docs/designs/             # design doc (source of truth)
 
 ## Roadmap
 
-- **Phase 1 (done):** All 4 calculators + landing page + tests
-- **Phase 2:** Stripe Checkout, deploy to Vercel, SEO content, YouTube offer-first content
+- **Phase 1 (done):** All 4 calculators + landing page + tests + email capture (Brevo hosted forms)
+- **Phase 2:** Lead capture live (Brevo hosted forms on static Hostinger) → Stripe Checkout + Vercel (needs a server for webhooks) → SEO content, YouTube offer-first content, direct distribution
 - **Phase 3:** Sell-first validation in real estate Facebook groups before heavy marketing

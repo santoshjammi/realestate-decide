@@ -45,24 +45,24 @@ different emails than free browsers. Never mix the two without knowing who's who
 - **Where:** inside the Rent vs Buy calculator results panel (`components/rent-vs-buy-calculator.tsx`).
 - **Behavior:** after the user runs the math, show a collapsed card: *"Get your full report + the free 1% Rule cheat sheet."*
 - **Fields:** email (single field, low friction). Optional first name for personalization later.
-- **Trigger on submit:** POST to a Next.js API route → adds contact to Brevo with tag `Free-User` → returns the cheat sheet (PDF or a well-formatted HTML view) in-app.
+- **Mechanism:** **Brevo hosted embedded form** (tag `Free-User`). Brevo's servers render and process the form, so it works on a fully static host (Hostinger) with **no server route required**. Paste Brevo's embed HTML into `NEXT_PUBLIC_BREVO_EMBED_HTML` (build-time env) and `components/email-capture.tsx` renders it in place.
 - **Anti-friction guardrail:** the calculator results already render on-screen before the gate. The gate gives a *bonus* (full report + cheat sheet), it never *withholds* the verdict. Do not paywall the core answer — that kills the SEO value.
 
-### 4.2 Stripe Checkout (automatic buyer capture)
-- Stripe captures email + name at checkout natively. A webhook (`checkout.session.completed`) pushes the buyer to Brevo with tag `Buyer` and records the SKU (which calculator they bought) as a custom attribute.
-- This is the highest-value contact type — a proven paying customer. No form needed.
+### 4.2 Stripe Checkout (automatic buyer capture) — NOT YET (needs a server)
+- Stripe captures email + name at checkout natively and would push buyers to Brevo with tag `Buyer`. **Requires a server for the webhook** — not possible on the static Hostinger export. Deferred until the site migrates to a server-capable host (e.g. Vercel) with Phase 2 checkout.
 
 ### 4.3 Homepage lead magnet (cold-traffic catch)
 - On the landing page (`app/page.tsx`), a compact email field tied to the hero CTA.
-- Magnet: **"The 1% Rule Cheat Sheet"** — one-page, downloadable, genuinely useful.
-- Tag `Subscriber`.
+- Magnet: **"The 1% Rule Cheat Sheet"** — one-page, genuinely useful.
+- Same **Brevo hosted form** mechanism, tag `Subscriber`.
 
 ## 5. Email Service — Brevo Free Tier (decided)
 
 - **Why:** best-in-class free automation + tag-based segmentation at $0 to start.
 - **Free limits:** 300 emails/day, unlimited contacts, 2 active automation flows.
-- **Migration path:** when validated, move up to paid Brevo or Kit (ConvertKit) — the segments and tags port cleanly.
-- **Credentials needed (vault, never chat/git):** Brevo API key → `~/.hermes/vault/brevo.env` (or extend existing hostinger.env). Stripe keys → `~/.hermes/vault/stripe.env`.
+- **Static-host architecture (chosen):** capture uses **Brevo hosted embedded forms** (tagged `Subscriber` / `Free-User`) that post directly to Brevo's servers — **no API route / server needed**, so it works on the static Hostinger export today.
+- **Migration path:** when validating to Stripe checkout / Vercel (Phase 2), the API-route path and automatic buyer capture slot right in — the lists/tags port cleanly.
+- **Credentials needed (vault, never chat/git):** Brevo hosted-form embed HTML → `NEXT_PUBLIC_BREVO_EMBED_HTML` (build-time env). Stripe keys (deferred until server host) → `~/.hermes/vault/stripe.env`.
 
 ## 6. Brevo Setup (one-time, when keys land)
 
@@ -155,14 +155,10 @@ Shorter and higher-value. Buyer already paid; we maximize LTV and referrals.
 
 ## 11. Verification Checklist
 
-- [ ] Capture UI renders on free calculator + homepage (email forms, no keys)
-- [ ] Stripe checkout captures buyer email automatically
-- [ ] Brevo tags: `Free-User`, `Buyer`, `Subscriber` configured
-- [ ] Automation Flow A (6 emails) live
-- [ ] Automation Flow B (3 emails) live
-- [ ] Weekly campaign scheduled
-- [ ] Unsubscribe / privacy (GDPR/CCPA) present
-- [ ] First real purchase recorded → verify buyer landed in Brevo with `Buyer` tag
+- [ ] Capture UI renders on free calculator + homepage (Brevo hosted-form embed, tag-configured)
+- [ ] `NEXT_PUBLIC_BREVO_EMBED_HTML` set with Brevo hosted forms for `Free-User` and `Subscriber`
+- [ ] Submitting a hosted form actually lands the contact in Brevo with the right tag
+- [ ] Stripe checkout (buyer capture) — deferred until server-capable host + Phase 2
 
 ## 12. Open Decisions
 

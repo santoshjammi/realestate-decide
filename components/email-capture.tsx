@@ -1,111 +1,77 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef } from 'react';
 
+/**
+ * Static-friendly email capture via Brevo's hosted embedded form.
+ *
+ * The Brevo embed is a `<div>` + script snippet that Brevo's servers render and
+ * process — so it works on a fully static host (Hostinger) with NO API route.
+ * Paste your Brevo "Hosted form" embed HTML into NEXT_PUBLIC_BREVO_EMBED_HTML
+ * (a build-time env var) and this renders it exactly in place.
+ *
+ * Until that env var is set, it renders a clean placeholder card so the UI is
+ * never blank, and the copy still sets up the "sell them more" promise.
+ *
+ * Each capture point maps to its own Brevo form/tag upstream:
+ *   source="homepage"         -> form tagged "Subscriber"
+ *   source="free-calculator"  -> form tagged "Free-User"
+ */
 type EmailCaptureProps = {
   source: 'homepage' | 'free-calculator';
   heading?: string;
   subtext?: string;
-  cta?: string;
 };
 
-/**
- * Reusable email-capture form. Every submission is POSTed to a Next.js API
- * route (/api/leads) that pushes the contact into Brevo with the right tag.
- *
- * Credential-free today: when the BREVO_API_KEY env var is absent, the API
- * route responds 501 and this form gracefully falls back to a "we saved it"
- * state (logs to console + localStorage) so the UI is fully testable before
- * marketing credentials are wired up.
- */
 export default function EmailCapture({
   source,
   heading = 'Get your full report + the free 1% Rule cheat sheet',
-  subtext = 'No spam. Unsubscribe anytime. The math is yours either way.',
-  cta = 'Send me the cheat sheet',
+  subtext = 'No spam. Unsubscribe anytime.',
 }: EmailCaptureProps) {
-  const [email, setEmail] = useState('');
-  const [name, setName] = useState('');
-  const [status, setStatus] = useState<'idle' | 'saving' | 'done' | 'error'>('idle');
+  const embedHtml = process.env.NEXT_PUBLIC_BREVO_EMBED_HTML;
+  const containerRef = useRef<HTMLDivElement>(null);
 
-  async function submit(e: React.FormEvent) {
-    e.preventDefault();
-    if (!email) return;
-    setStatus('saving');
-    try {
-      const res = await fetch('/api/leads', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, name, source }),
-      });
-      if (res.ok || res.status === 501) {
-        // 501 = backend not wired yet; still record locally so UX works in dev.
-        try {
-          const key = `realestatedecide:leads`;
-          const existing = JSON.parse(localStorage.getItem(key) || '[]');
-          existing.push({ email, name, source, ts: new Date().toISOString() });
-          localStorage.setItem(key, JSON.stringify(existing));
-        } catch {
-          /* localStorage unavailable — non-fatal */
-        }
-        setStatus('done');
-      } else {
-        setStatus('error');
-      }
-    } catch {
-      setStatus('error');
-    }
-  }
+  useEffect(() => {
+    if (!embedHtml || !containerRef.current) return;
+    // Render Brevo's embed; force fresh script tags so its loader runs.
+    containerRef.current.innerHTML = '';
+    const host = document.createElement('div');
+    host.innerHTML = embedHtml;
+    host.querySelectorAll('script').forEach((old) => {
+      const fresh = document.createElement('script');
+      Array.from(old.attributes).forEach((a) => fresh.setAttribute(a.name, a.value));
+      fresh.textContent = old.textContent;
+      host.replaceChild(fresh, old);
+    });
+    containerRef.current.appendChild(host);
+  }, [embedHtml]);
 
-  if (status === 'done') {
+  if (embedHtml) {
     return (
-      <div className="rounded-xl border border-green-200 bg-green-50 px-5 py-4 dark:border-green-800 dark:bg-green-950/40">
-        <p className="text-sm font-semibold text-green-800 dark:text-green-300">
-          ✅ Check your inbox — your cheat sheet is on the way.
-        </p>
-        <p className="mt-1 text-xs text-green-700 dark:text-green-400">
-          (Dev mode: no email sent yet — recorded locally. Wire Brevo keys to deliver.)
-        </p>
+      <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-900">
+        <h3 className="text-base font-bold text-gray-900 dark:text-gray-100">{heading}</h3>
+        {subtext && (
+          <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">{subtext}</p>
+        )}
+        <div ref={containerRef} className="mt-4" />
       </div>
     );
   }
 
+  // Placeholder until the Brevo embed is wired. Visually matches the real card.
   return (
-    <form
-      onSubmit={submit}
-      className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-900"
-    >
+    <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-900">
       <h3 className="text-base font-bold text-gray-900 dark:text-gray-100">{heading}</h3>
       {subtext && <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">{subtext}</p>}
       <div className="mt-4 flex flex-col gap-2 sm:flex-row">
-        <input
-          type="text"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder="First name (optional)"
-          className="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
-        />
-        <input
-          type="email"
-          required
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          placeholder="you@example.com"
-          className="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
-        />
-        <button
-          type="submit"
-          disabled={status === 'saving'}
-          className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 disabled:opacity-60"
-        >
-          {status === 'saving' ? 'Sending…' : cta}
-        </button>
+        <div className="h-10 flex-1 rounded-lg border border-dashed border-gray-300 dark:border-gray-600" />
+        <div className="h-10 w-40 rounded-lg bg-blue-600/20" />
       </div>
-      {status === 'error' && (
-        <p className="mt-2 text-xs text-red-600 dark:text-red-400">
-          Something went wrong. Please try again.
-        </p>
-      )}
-    </form>
+      <p className="mt-3 text-xs font-medium text-blue-600 dark:text-blue-400">
+        {source === 'homepage'
+          ? 'Lead capture: connect your Brevo hosted form (tag "Subscriber").'
+          : 'Free-report capture: connect your Brevo hosted form (tag "Free-User").'}
+      </p>
+    </div>
   );
 }

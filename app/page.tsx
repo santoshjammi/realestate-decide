@@ -70,7 +70,6 @@ export default function Home() {
           source="homepage"
           heading="Free: the 1% Rule Cheat Sheet"
           subtext="One page. The exact rule investors use to spot a bad deal before writing an offer. Yours free — no spam, unsubscribe anytime."
-          cta="Send me the cheat sheet"
         />
       </section>
 
