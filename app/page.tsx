@@ -1,5 +1,7 @@
 import Link from 'next/link';
 import EmailCapture from '@/components/email-capture';
+import { BuyButton } from '@/components/buy-button';
+import { siteConfig } from '@/lib/site-config';
 
 const calculators = [
   {
@@ -94,6 +96,78 @@ export default function Home() {
         <p className="mt-4 text-sm text-gray-600 dark:text-gray-400">
           If the math doesn&apos;t save you from one bad deal, it&apos;s paid for itself.
         </p>
+      </section>
+
+      {/* Value ladder — tripwire → core → back-end */}
+      <section className="mt-16">
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+          Start small. Upgrade when it pays for itself.
+        </h2>
+        <p className="mt-2 max-w-2xl text-sm text-gray-600 dark:text-gray-400">
+          One decision at a time. Each tool protects a bigger decision than the last — so it
+          pays for itself the first time it saves you from a bad deal.
+        </p>
+        <div className="mt-6 grid gap-6 sm:grid-cols-3">
+          {/* Tripwire */}
+          <div className="flex flex-col rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-900">
+            <span className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+              Step 1 · Tripwire
+            </span>
+            <h3 className="mt-2 text-lg font-bold text-gray-900 dark:text-gray-100">
+              {siteConfig.pricing.tripwire.name}
+            </h3>
+            <p className="mt-1 flex-1 text-sm text-gray-600 dark:text-gray-300">
+              Net profit, ROI, profit per month, and the 70% rule. The cheapest way to see the
+              math before you commit.
+            </p>
+            <div className="mt-4 flex items-center justify-between">
+              <span className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                ${siteConfig.pricing.tripwire.price}
+              </span>
+              <BuyButton rung="tripwire" label="Get it" />
+            </div>
+          </div>
+
+          {/* Core */}
+          <div className="flex flex-col rounded-xl border-2 border-blue-500 bg-blue-50 p-6 shadow-sm dark:border-blue-700 dark:bg-blue-950/40">
+            <span className="text-xs font-semibold uppercase tracking-wide text-blue-600 dark:text-blue-400">
+              Step 2 · Full Suite
+            </span>
+            <h3 className="mt-2 text-lg font-bold text-gray-900 dark:text-gray-100">
+              {siteConfig.pricing.core.name}
+            </h3>
+            <p className="mt-1 flex-1 text-sm text-gray-700 dark:text-gray-300">
+              All 4 calculators — rental, flip, refinance, rent-vs-buy. Protects a $200,000
+              decision. The complete toolkit.
+            </p>
+            <div className="mt-4 flex items-center justify-between">
+              <span className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                ${siteConfig.pricing.core.price}
+              </span>
+              <BuyButton rung="core" label="Get the suite" />
+            </div>
+          </div>
+
+          {/* Back-end */}
+          <div className="flex flex-col rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-900">
+            <span className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+              Step 3 · Done-With-You
+            </span>
+            <h3 className="mt-2 text-lg font-bold text-gray-900 dark:text-gray-100">
+              {siteConfig.pricing.backEnd.name}
+            </h3>
+            <p className="mt-1 flex-1 text-sm text-gray-600 dark:text-gray-300">
+              We run the numbers on your actual deal and tell you exactly what to do. For the
+              big decisions you can't afford to get wrong.
+            </p>
+            <div className="mt-4 flex items-center justify-between">
+              <span className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                ${siteConfig.pricing.backEnd.price}
+              </span>
+              <BuyButton rung="backEnd" label="Enquire" />
+            </div>
+          </div>
+        </div>
       </section>
 
       {/* Calculator grid */}
